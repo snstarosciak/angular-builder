@@ -1,0 +1,22 @@
+{
+  "name": "Egghead",
+  "version": "0.0.1",
+  "homepage": "https://github.com/eggheadio/egghead-angularjs-from-scratch-getting-started",
+  "description": "This is an example",
+  "authors": [
+    "Stevie Starosciak"
+  ],
+  "private": true,
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "angular": "~1.3.14",
+    "angular-ui-router": "~0.2.13"
+  }
+}
