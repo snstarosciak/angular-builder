@@ -5,51 +5,17 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-nodemon');
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-html2js');
+  grunt.loadNpmTasks('grunt-browserify');
 
   var userConfig = require('./build.config.js');
 
   var taskConfig = {
     pkg: grunt.file.readJSON('package.json'),
 
-    nodemon: {
-      dev: {
-        script: 'server/server.js',
-        options: {
-          watchedFolders: ['server']
-        }
-      }
-    },
-    concurrent: {
-      dev: {
-        tasks: ['nodemon', 'watch'],
-        options: {
-          logConcurrentOutput: true
-        }
-      }
-    },
+
     clean: [
       '<%= build_dir %>'
     ],
-
-    index: {
-      build: {
-        dir: '<%= build_dir %>',
-        src: [
-          '<%= vendor_files.js %>',
-          '<%= build_dir %>/src/**/*.js'
-        ]
-      }
-    },
-     html2js: {
-        app: {
-            options: {
-                base: 'src/app'
-            },
-            src: [ '<%= app_files.atpl %>' ],
-            dest: '<%= build_dir %>/templates-app.js'
-      }
-    },
-
     copy: {
       appjs: {
         files: [
@@ -61,7 +27,29 @@ module.exports = function(grunt) {
           }
         ]
       },
+      vendorjs: {
+        files: [
+          {
+            src: ['<%= vendor_files.js %>'],
+            dest: '<%= build_dir %>/',
+            cwd: '.',
+            expand: true
+          }
+        ]
+      },
     },
+    index: {
+      build: {
+        dir: '<%= build_dir %>',
+        src: [
+          '<%= vendor_files.js %>',
+          '<%= build_dir %>/src/app/**/*.js',
+          '<%= html2js.app.dest %>',
+          '<%= build_dir %>/bundle.js'
+        ]
+      }
+    },
+
     watch: {
       jssrc: {
         files: [
@@ -79,7 +67,47 @@ module.exports = function(grunt) {
         options: {
           livereload: false
         }
-    } }
+      },
+      modules: {
+        files: 'src/modules/**/*.js',
+        tasks: ['browserify']
+      }
+    },
+
+    nodemon: {
+      dev: {
+        script: 'server/server.js',
+        options: {
+          watchedFolders: ['server']
+        }
+      }
+    },
+    concurrent: {
+      dev: {
+        tasks: ['nodemon', 'watch'],
+        options: {
+          logConcurrentOutput: true
+        }
+      }
+    },
+    html2js: {
+        app: {
+            options: {
+                base: 'src/app'
+            },
+            src: [ '<%= app_files.atpl %>' ],
+            dest: '<%= build_dir %>/templates-app.js'
+      }
+    },
+    browserify: {
+      build: {
+        src: ['src/modules/modules.js'],
+        dest: '<%= build_dir %>/bundle.js',
+        options: {
+          debug: true
+        }
+      }
+    }
   };
 
   grunt.initConfig(grunt.util._.extend(taskConfig, userConfig));
@@ -89,7 +117,7 @@ module.exports = function(grunt) {
 
   // Setup grunt tasks to handle all the copying and building
   grunt.registerTask('build', [
-    'clean', 'copy', 'index', 'html2js'
+    'clean', 'copy', 'html2js', 'browserify', 'index'
   ]);
 
 
