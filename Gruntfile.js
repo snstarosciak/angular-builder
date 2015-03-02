@@ -2,17 +2,28 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
+  grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-nodemon');
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-html2js');
   grunt.loadNpmTasks('grunt-browserify');
+  grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-ng-annotate');
+  grunt.loadNpmTasks('grunt-contrib-uglify');
 
   var userConfig = require('./build.config.js');
 
   var taskConfig = {
     pkg: grunt.file.readJSON('package.json'),
+    dist_target: '<%= dist_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>',
 
-
+    uglify: {
+      dist: {
+        files: {
+          '<%=  dist_target %>.js': '<%= dist_target %>.js'
+        }
+      }
+    },
     clean: [
       '<%= build_dir %>'
     ],
@@ -45,7 +56,15 @@ module.exports = function(grunt) {
           '<%= vendor_files.js %>',
           '<%= build_dir %>/src/app/**/*.js',
           '<%= html2js.app.dest %>',
-          '<%= build_dir %>/bundle.js'
+          '<%= build_dir %>/bundle.js',
+          '<%= build_dir %>/assets/**/*.css'
+        ]
+      },
+      dist: {
+        dir: '<%= dist_dir %>',
+        src: [
+          '<%= dist_dir %>/**/*.js',
+          '<%= dist_dir %>/**/*.css'
         ]
       }
     },
@@ -71,6 +90,10 @@ module.exports = function(grunt) {
       modules: {
         files: 'src/modules/**/*.js',
         tasks: ['browserify']
+      },
+      less: {
+        files: ['src/less/**/*.less'],
+        tasks: ['less:build']
       }
     },
 
@@ -107,6 +130,44 @@ module.exports = function(grunt) {
           debug: true
         }
       }
+    },
+    less: {
+       build: {
+         files: {
+           '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css': 'src/less/main.less'
+          }
+       },
+       dist: {
+         options: {
+          compress: true
+         },
+         files: {
+          '<%= dist_target %>.css' : 'src/less/main.less'
+         }
+       }
+    },
+    concat: {
+      dist_js: {
+        src: [
+          '<%= vendor_files.js %>',
+          'module.prefix',
+          '<%= build_dir %>/src/app/**/*.js',
+          '<%= build_dir %>/templates-app.js',
+          'module.suffix',
+          '<%= build_dir %>/bundle.js'
+        ],
+        dest: '<%= dist_dir %>/assets/<%= pkg.name %>-<%=pkg.version %>.js'
+      }
+    },
+    ngAnnotate: {
+      compile: {
+        files: [
+          {
+            src: [ '<%= dist_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.js' ],
+           dest: '<%= dist_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.js'
+          }
+        ]
+      }
     }
   };
 
@@ -117,26 +178,33 @@ module.exports = function(grunt) {
 
   // Setup grunt tasks to handle all the copying and building
   grunt.registerTask('build', [
-    'clean', 'copy', 'html2js', 'browserify', 'index'
+    'clean', 'copy', 'html2js', 'browserify', 'less:build', 'index:build'
   ]);
 
-
-  function filterForJS(files) {
+  // Setup task for doing distribution version on prod
+  grunt.registerTask('dist', [
+    'build', 'concat', 'ngAnnotate', 'uglify', 'less:dist', 'index:dist'
+  ]);
+  function filterForExtension(extension, files) {
+    var regex = new RegExp('\\.' + extension + '$'),
+      dirRE = new RegExp('^(' + grunt.config('build_dir') + ')\/', 'g');
     return files.filter(function (file) {
-      return file.match(/\.js$/);
+      return file.match(regex);
+    }).map(function (file) {
+      return file.replace(dirRE, '');
     });
   }
   grunt.registerMultiTask('index', 'Process index.html template', function() {
-    var dirRE = new RegExp('^(' + grunt.config('build_dir') + ')\/', 'g');
-      var jsFiles = filterForJS(this.filesSrc).map(function (file) {
-        return file.replace(dirRE, '');
-      });
+      var jsFiles = filterForExtension('js', this.filesSrc),
+cssFiles = filterForExtension('css', this.filesSrc);
 
       grunt.file.copy('src/index.html', this.data.dir + '/index.html', {
         process: function(contents, path) {
           return grunt.template.process(contents, {
               data: {
-                scripts: jsFiles
+                scripts: jsFiles,
+                styles: cssFiles,
+                version: grunt.config('pkg.version')
               }
           });
         }

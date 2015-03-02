@@ -2,11 +2,15 @@
  <html ng-app="example-app">
  <head>
    <title>AngularJS Example</title>
+   <% styles.forEach(function (file ) { %>
+		<link rel="stylesheet" type="text/css" src="<%= file %>"/>
+	<% }); %>
  </head>
 <body>
 	<div ui-view></div>
 	<% scripts.forEach(function (file ) { %>
 		<script type="text/javascript" src="<%= file %>"></script>
 	<% }); %>
+
 </body>
 </html>

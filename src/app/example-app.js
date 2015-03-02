@@ -8,7 +8,7 @@ angular.module('example-app', [
       .state('root', {
         url: '/',
         template: '<div>This is the application root.</div>',
-        controller: 'TetCtrl'
+        //controller: 'TestCtrl'
   })
 
     $urlRouterProvider.otherwise('/');
@@ -18,7 +18,7 @@ angular.module('example-app', [
   });
 
   angular.module('example-app.login', [
-    'ui-router'
+    'ui.router'
   ])
     .config(function($stateProvider) {
       $stateProvider
