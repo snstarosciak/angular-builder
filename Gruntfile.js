@@ -1,4 +1,6 @@
 module.exports = function(grunt) {
+
+  //-- NPM Tasks
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
@@ -11,12 +13,18 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-ng-annotate');
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
+  //-- Defines the variables to be used for file structures
   var userConfig = require('./build.config.js');
 
+
+  //-- Begins giant task runner config
   var taskConfig = {
     pkg: grunt.file.readJSON('package.json'),
     dist_target: '<%= dist_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>',
 
+
+    //-- Turns code into unreadable variable aliases
+    //   in order to reduce bytes to bites
     uglify: {
       dist: {
         files: {
@@ -24,9 +32,13 @@ module.exports = function(grunt) {
         }
       }
     },
+
+    //-- Cleans the build directory in order to relplace with new
     clean: [
       '<%= build_dir %>'
     ],
+
+    //-- Copies all source files into build directory
     copy: {
       appjs: {
         files: [
@@ -49,6 +61,8 @@ module.exports = function(grunt) {
         ]
       },
     },
+
+    //-- Builds the index page for the app
     index: {
       build: {
         dir: '<%= build_dir %>',
@@ -69,6 +83,8 @@ module.exports = function(grunt) {
       }
     },
 
+
+    //-- Responsible for watching all changes in all files
     watch: {
       jssrc: {
         files: [
@@ -97,6 +113,9 @@ module.exports = function(grunt) {
       }
     },
 
+
+    // -- Watches for any changes on the node server and
+    //    restarts it when it detects a change
     nodemon: {
       dev: {
         script: 'server/server.js',
@@ -113,6 +132,9 @@ module.exports = function(grunt) {
         }
       }
     },
+
+    //-- Cache all html templates into JS objects
+    //   for faster load times
     html2js: {
         app: {
             options: {
@@ -131,6 +153,8 @@ module.exports = function(grunt) {
         }
       }
     },
+
+    // -- Build out all less files into one single file
     less: {
        build: {
          files: {
@@ -146,6 +170,8 @@ module.exports = function(grunt) {
          }
        }
     },
+
+    //-- Take contents of all files and shove them into one
     concat: {
       dist_js: {
         src: [
@@ -159,6 +185,9 @@ module.exports = function(grunt) {
         dest: '<%= dist_dir %>/assets/<%= pkg.name %>-<%=pkg.version %>.js'
       }
     },
+
+    //-- Ensure that controllers have reserved names to refer to with variables
+    //   if code gets uglified...and something like $stateProvider turns into a
     ngAnnotate: {
       compile: {
         files: [
