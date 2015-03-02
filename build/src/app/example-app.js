@@ -12,10 +12,7 @@ angular.module('example-app', [
   })
 
     $urlRouterProvider.otherwise('/');
-})
-  .controller('TestCtrl', function(debug) {
-    debug('say it is so');
-  });
+});
 
   angular.module('example-app.login', [
     'ui.router'

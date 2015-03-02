@@ -9,9 +9,10 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-concurrent');
   grunt.loadNpmTasks('grunt-html2js');
   grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-contrib-less');
+  grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-ng-annotate');
   grunt.loadNpmTasks('grunt-contrib-uglify');
+  grunt.loadNpmTasks('grunt-es6-transpiler');
 
   //-- Defines the variables to be used for file structures
   var userConfig = require('./build.config.js');
@@ -28,7 +29,8 @@ module.exports = function(grunt) {
     uglify: {
       dist: {
         files: {
-          '<%=  dist_target %>.js': '<%= dist_target %>.js'
+          '<%=  dist_target %>.js': '<%= dist_target %>.js',
+          '<%=  dist_target %>.css': '<%= dist_target %>.css'
         }
       }
     },
@@ -107,9 +109,9 @@ module.exports = function(grunt) {
         files: 'src/modules/**/*.js',
         tasks: ['browserify']
       },
-      less: {
-        files: ['src/less/**/*.less'],
-        tasks: ['less:build']
+      sass: {
+        files: ['src/scss/**/*.scss'],
+        tasks: ['sass:build']
       }
     },
 
@@ -154,21 +156,21 @@ module.exports = function(grunt) {
       }
     },
 
-    // -- Build out all less files into one single file
-    less: {
-       build: {
+    // -- Build out all sass files into one single file
+    sass: {
+      build: {
          files: {
-           '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css': 'src/less/main.less'
+           '<%= build_dir %>/assets/<%= pkg.name %>-<%= pkg.version %>.css': 'src/scss/main.scss'
           }
-       },
-       dist: {
-         options: {
-          compress: true
-         },
-         files: {
-          '<%= dist_target %>.css' : 'src/less/main.less'
-         }
-       }
+       },                            // Task
+      dist: {                            // Target
+        options: {                       // Target options
+          style: 'expanded'
+        },
+        files: {                         // Dictionary of files
+          '<%= dist_target %>.css' : 'src/scss/main.scss'       // 'destination': 'source'
+        }
+      }
     },
 
     //-- Take contents of all files and shove them into one
@@ -197,6 +199,14 @@ module.exports = function(grunt) {
           }
         ]
       }
+    },
+    es6Transpiler: {
+      "es6-transpiler": {
+        test: {
+            src: 'test.js',
+            dest: 'test.es5.js'
+        }
+      }
     }
   };
 
@@ -207,12 +217,12 @@ module.exports = function(grunt) {
 
   // Setup grunt tasks to handle all the copying and building
   grunt.registerTask('build', [
-    'clean', 'copy', 'html2js', 'browserify', 'less:build', 'index:build'
+    'clean', 'copy', 'html2js', 'browserify', 'sass:build', 'index:build'
   ]);
 
   // Setup task for doing distribution version on prod
   grunt.registerTask('dist', [
-    'build', 'concat', 'ngAnnotate', 'uglify', 'less:dist', 'index:dist'
+    'build', 'concat', 'ngAnnotate', 'uglify', 'sass:dist', 'index:dist'
   ]);
   function filterForExtension(extension, files) {
     var regex = new RegExp('\\.' + extension + '$'),
