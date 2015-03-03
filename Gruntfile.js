@@ -12,7 +12,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-sass');
   grunt.loadNpmTasks('grunt-ng-annotate');
   grunt.loadNpmTasks('grunt-contrib-uglify');
-  grunt.loadNpmTasks('grunt-es6-transpiler');
+  grunt.loadNpmTasks('grunt-traceur-simple');
 
   //-- Defines the variables to be used for file structures
   var userConfig = require('./build.config.js');
@@ -200,14 +200,20 @@ module.exports = function(grunt) {
         ]
       }
     },
-    es6Transpiler: {
-      "es6-transpiler": {
-        test: {
-            src: 'test.js',
-            dest: 'test.es5.js'
+
+    //-- IN PROGRESS: Need to get this to run effectively
+    traceur: {
+        options: {
+            includeRuntime: true,
+            traceurOptions: "--experimental --source-maps"
+        },
+        "app": {
+            files: {
+                "src/es6/app.js": [ "src/es6/test.js" ]
+            }
         }
-      }
     }
+
   };
 
   grunt.initConfig(grunt.util._.extend(taskConfig, userConfig));
